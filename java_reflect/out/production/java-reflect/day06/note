@@ -1,0 +1,47 @@
+反射在注解中的使用:
+
+首先了解一下注解:
+
+注解是Java1.5, JDK5.0引用的技术，与类，接口，枚举处于同一层次。它可以声明在包、类、字段、方法、局部变量、方法参数等的前面，用来对这些元素进行说明、注释。
+
+在Java中，自带了三种注解，这三种注解存在于java.lang包中
+
+1、Override
+它的作用是对重写基类中的方法进行标记，如果被标记的类并没有实际覆盖基类，则编译器会报出错误警告。
+
+2、Deprecated
+它的作用是对不应该再使用的方法添加标记，当程序员使用这些方法时，将会在编译时显示提示信息。当一个方法名或者类名上面添加此注解后，编译器会认为这个方法或类是
+过期的。但是标识过期方法不影响使用。
+
+3、SuppressWarnings
+这个仅仅是告诉编译器忽略特定的警告信息，例如在泛型中使用原生数据类型，例如我们在使用一些Deprecated注解的方法时，编译器就会提出黄线警告，那么只要在使用的地方
+加上@SuppressWarnings("deprecation")就可以使编译器忽略这个警告。
+
+此注解常用的参数值有:deprecation(忽略使用过时类或者方法)，unchecked(忽略执行了未检查换装时警告)，fallthrough(忽略switch直接指向到下一个case块没有break警告)，
+path(忽略类路径，源文件路径中有不存在路径时警告)，serial(忽略可序列化类中没有serialVersionUID时的警告)，finally(任何finally不能正常执行时的警告),all(以上都有)。
+
+
+自定义注解:
+
+首先，自定义注解我们必须了解四个元注解，元注解指作用于注解之上的元数据或者元信息，简单讲，元注解就是标注在注解之上的注解，用来指明注解的信息:
+
+1、Document--指明拥有这个注解的元素可以被javadoc此类的工具文档化。这种类型应该用于注解那些影响客户使用带注释的元素声明的类型。如果一种声明使用Documented进行
+             注解，这种类型的注解被作为被标注的程序成员的公共API。
+
+2、Inherited--指明该注解类型被自动继承。如果用户在当前类中查询这个元注解类型并且当前类的声明中不包含这个元注解类型，那么也将自动查询当前类的父类是否存在
+              Inherited元注解，这个动作将被重复执行，直到这个标注类型被找到，或者是查询到顶级的父类。
+
+3、Retention--指明在什么级别显示此注解，主要的参数有以下几种:
+1--RetentionPolicy.SOURCE 注解存在于源代码中，编译时会被抛弃。
+2--RetentionPolicy.CLASS 注解会被编译到class文件中，但是JVM会忽略。
+3--RetentionPolicy.RUNTIME JVM会读取注解，同时会保存到class文件中。
+
+4、Target--主要的参数包括以下几种:
+1--ElementType.TYPE 用于类，接口，枚举但不能是注解
+2--ElementType.FIELD 作用于字段，包含枚举值
+3--ElementType.METHOD 作用于方法，不包含构造方法
+4--ElementType.PARAMETER 作用于方法的参数
+5--ElementType.CONSTRUCTOR 作用于构造方法
+6--ElementType.LOCAL_VERIABLE 作用于本地变量或者catch语句
+7--ElementType.ANNOTATION_TYPE 作用于注解
+8--ElementType.PACKAGE 作用于包

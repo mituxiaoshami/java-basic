@@ -1,0 +1,50 @@
+反射
+
+什么是反射？
+
+答：Oracle官方对反射的解释：
+
+Reflection enables Java code to discover information about the fields, methods and constructors of loaded classes,
+and to use reflected fields, methods, and constructors to operate on their underlying counterparts, within security restrictions.
+
+The API accommodates applications that need access to either the public members of a target object (based on its runtime class) or
+the members declared by a given class. It also allows programs to suppress default reflective access control.
+
+简而言之：通过反射，我们可以在运行时获得程序或程序集中每一个类型的成员和成员的信息。
+
+而关于如何利用在运行期间获取类信息，主要采取两种形式：一种是RTTI(运行期类型鉴定)，另一种是Java 1.1 特有的反射机制
+
+RTTI(Run-time Type Identification)一直是C++的概念，比如type_info类，typeid函数，能返回类型信息，判断类型是否相等等功能。
+RTTI和反射是两个不同的体系在描述一件事情(在运行时得到类信息),RTTI对应C++语言，反射对应OO面向对象语言。
+
+RTTI的初期想法：当有一个指向基类的类型(父类)(在day01代码中指的是Shape类)的reference(引用)时，RTTI机制让你找出其所指的确切型别。
+                也就是说，当手上只有基础类型的一个引用时，利用它判断一个对象的正确类型。
+
+反射是在RTTI的基础上，进行了拓展，也就是说，RTTI实际上是一种思想，Java中多态和反射的使用都利用了这一思想。
+
+RTTI的使用场景：多态 (多态是隐式地利用RTTI，反射则是显式地使用RTTI)。
+
+一：首先用一个接口或抽象类定义基类(建议用接口)，然后使用各种具体的类实现这个接口或抽象类，实现多态。
+面向对象的基本目标是用大量代码操作基类(接口或抽象类),这样做的目的是为了对程序进行扩展时，不会影响原有的代码。
+所以，在编译期间，调用的是基类中的方法，而真正执行的方法却要在运行期间确定，也就是子类或者实现类中具体的实现方法。
+(编译器在编译时仍然不知道对象的类型，但方法调用机制能自己去调查，找到正确的方法主体。)
+
+二：如果基类是来自一个库或者由别人控制，这时候RTTI就是一种解决之道：可以继承一个新类，然后添加你要的方法。
+    在代码的其他地方，可以检查你自己特定的类型，并调用你自己的方法。
+
+
+RTTI和反射的区别：RTTI是我们在编译和运行期间拥有所有类型；反射是RTTI发展产生的概念和技术，反射的作用是分析类的结构，并可以创建类的对象。
+也就是说，对于RTTI来说，是在编译期间打开和检查.class文件，可以用普通的方法调用对象的所有方法。
+而对于反射机制来说.class文件在编译时是不可获取的，所以是运行时打开和检查.class文件。
+
+为了更好的理解反射，我们先从RTTI开始理解:
+
+运行期类型鉴定(RTTI)是一种机制，是Java程序在运行时，维护类的相关信息，而实现RTTI功能的主要借助于Class类的对象实现。
+
+
+
+
+
+
+
+
