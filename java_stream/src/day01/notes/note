@@ -1,0 +1,202 @@
+Java IO 系统
+
+IO的作用:
+
+所谓的流，就是一种抽象的数据的总称，它的本质就是用来传输。
+按照流的数据流向: 可以划分为: 输入流和输出流
+
+在Java中，输入输出可以看做是一个系统，而这个系统，解决的最大问题就是通过不同的方式(顺序、随机访问、二进制、字符、按行、按字等等)
+和来自不同途径(文件、控制台、网络连接)的IO进行通信。
+
+起初，Java IO库的设计者通过创建大量类来克服这个问题，但是，如果这么多的类都采用的话，会导致不知道从哪里入手。
+所以，Java 1.0升级到Java 1.1 后，Sun的设计人员对原来的IO库进行了扩展，添加了大量新的内容。所以导致目前，不得不混合使用新添加的内容和旧库中的内容。
+
+区别: Java1.0: Java提供的类都是以字节(byte)为单位，例如: FileInputStream和FileOutputStream。 在java中，字节是占1个Byte，即8位，有符号类型。
+      Java1.1: 为了与国际化进行接轨，在java io中添加了许多以字符(Unicode)为单位进行操作的类。 在java中，字符是占2个Byte，即16位，无符号类型。
+
+什么是有符号类型，什么是无符号类型 (例: 有无符号类型的整数) (表示正负):
+
+1、有符号整数，就是int，因为有正负之分，所以16位的第一位表示正负，0为正，1为负，所以能表示的范围只有后面15位，即-32768~32768 (-2e15~2e15)
+2、无符号整数，就是定义成unsigned int，因为第一位不用代表正负了，没有符号，全是正的，所以能表示的范围有16位，即全是有效位，所以范围是0~65535(0~2e16-1)
+
+
+介于目前这种情况，我们分开介绍旧库和新库中的内容，这样有利于在合适的情况下选择最合适的类。
+
+
+
+
+字节流:
+
+Java IO类可分为输入与输出两个部分:
+输入:通过继承，从InputStream(输入流)衍生的所有类都拥有read()这个基本方法，用于读取单个字节或者字节数组。
+输出:通过基础，从OutputStream(输出流)衍生的所有类都拥有基本方法write()，用于写入单个字节或者字节数组。
+
+从InputStream开始入手:
+
+InputStream的作用: 把不同的来源转化成相同的输入流的对象，而这些来源包括
+1、字节数组
+2、String对象
+3、文件
+4、管道：与现实生活中的管道类似：将一些东西置入一段，它们在另一端出来。
+5、一系列其他流，方便统一收集到单独一个流内。
+6、Internet连接等。
+
+除此以外，FilterInputStream属于InputStream的一个子类，而在这个类中，用到了装饰器的设计模式，它的作用是用来封装其他的输入流，并为它们提供额外的功能。FilterInputStream在
+实例化的时候，要传一个InputStream类的对象进来。而且这个类中的一系列方法实际上都是调用的都是InputStream中的read()方法。而具体装饰的部分，都有FilterInputStream的子类来实现。
+将相应的InputStream类的对象装饰之后，向外提供(也就是为其他的InputStream类提供了有用的功能)。
+
+InputStream中子类的具体实现(以字节为单位的输入流的框架(一部分)):
+
+                  |- ByteArrayInputStream
+                  |- PipedInputStream
+                  |                   -------------BufferedInputStream
+InputStream-------|- FilterInputStream|
+                  |                   -------------DataInputStream
+                  |
+                  |                   ---------------File
+                  |- FileInputStream  |
+                  |                   ---------------FileDescriptor
+                  |- ObjectInputStream
+
+1、ByteArrayInputStream: 字节数组输入流。它包含一个内部缓冲区，该缓冲区包含从流中读取的字节；通俗点说，它的内部缓冲区就是一个字节数组，而ByteArrayInputStream本质就是通过字节数组来实现的。
+
+2、FileInputStream: 用于从文件读取信息 代表文件名的一个String，或者一个File或FileDescriptor对象作为一个数据源使用。通过将其和FilterInputStream对象对接，向外提供。
+   File: File是"文件"和"目录路径名"的抽象表示形式，注意点:
+         1、File不仅仅只是表示文件，它也可以表示目录
+         2、File虽然在io中保留定义，但是它的父类是Object，而不是InputStream。
+   FileDescriptor: 文件描述符，它可以被用来表示开放文件，开放套接字等。
+
+3、PipedInputString: 产生为相关的PipedOutputStream写的数据。实现了"管道化"的概念，将PipedOutputStream作为一个数据源使用。和PipedOutputStream一起使用，能实现多线程间的管道通信
+
+4、SequenceInputStream: 将两个或更多的InputStream对象转换成单个InputStream使用  使用两个InputStream对象或者一个Enumeration，用于InputStream对象的一个容器，同时，把这个容器当做
+   数据源使用。通过将其和FilterInputStream对象对接，向外提供。
+
+5、FilterInputStream:过滤输入流。它是DataInputStream和BufferedInputStream的父类。
+
+6、FilterInputStream的子类(DataInputStream): 数据输入流。它是用来装饰其它输入流，它“允许应用程序以与机器无关方式从底层输入流中读取基本 Java 数据类型”,也就是从流中读取java基本类型。
+
+7、FilterInputStream的子类(BufferedInputStream): 缓冲输入流。它的作用是为另一个输入流添加缓冲功能。
+
+8、ObjectInputStream 是对象输入流。它和ObjectOutputStream一起，用来提供对“基本数据或对象”的持久存储。
+
+从FilterInputStream输入流中总结 装饰者设计模式
+
+那么什么是装饰者设计模式: 利用层次化对象动态和透明地添加单个对象的功能的方式，就是装饰者(Decorator)设计模式(动态的给一个对象添加一些额外的职责)。
+在FilterInputStream中是怎么体现的: 在FilterInputStream中，操作的都是InpputStream对象，也就是说，FilterInputStream类其实是对InputStream类或者InputStream子类的对象的一个修饰。
+添加不同类型的功能也是由FilterInputStream的子类去具体实现的，FilterInputStream只是简单的模仿了自己的基础类(InputStream)，这是一个装饰器的基本要求。
+
+要求: 装饰者设计模式规定: 装饰器方案规定封装于初始化对象中的所有对象都拥有相同的接口。以便利用装饰类的"透明"性质--我们将相同的消息发给一个对象，无论它是否已被"修饰"。
+在FilterInputStream中是怎么体现的: 对FilterInputStream类和它的子类或者说是各种装饰器类来说，无论传进去的流是上面几种的任何一种，它都是InputStream的子类，或者它都是同一个接口
+                                   的实现。(因为对装饰器来说，它操作的永远的InputStream)。无论传进去的流是不是被修饰过，它说到底还是一个InputStream，所以它还可以继续被修饰。
+
+
+
+
+InputStream方法列表:
+
+// 构造函数
+InputStream()
+
+             int        available()
+             void       close()
+             void       mark(int readlimit)
+abstract     boolean    markSupported()
+             int        read(byte[] buffer)
+             int        read()
+             int        read(byte[] buffer, int offset, int length)
+
+synchronized void       reset()
+             long       skip(long byteCount)
+
+
+InputStream源码分析:
+
+package java.io;
+
+public abstract class InputStream implements Closeable {
+
+    // 能skip的大小
+    private static final int MAX_SKIP_BUFFER_SIZE = 2048;
+
+    // 从输入流中读取数据的下一个字节。
+    public abstract int read() throws IOException;
+
+    // 将数据从输入流读入 byte 数组。
+    public int read(byte b[]) throws IOException {
+        return read(b, 0, b.length);
+    }
+
+    // 将最多 len 个数据字节从此输入流读入 byte 数组。
+    public int read(byte b[], int off, int len) throws IOException {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (off < 0 || len < 0 || len > b.length - off) {
+            throw new IndexOutOfBoundsException();
+        } else if (len == 0) {
+            return 0;
+        }
+
+        int c = read();
+        if (c == -1) {
+            return -1;
+        }
+        b[off] = (byte)c;
+
+        int i = 1;
+        try {
+            for (; i < len ; i++) {
+                c = read();
+                if (c == -1) {
+                    break;
+                }
+                b[off + i] = (byte)c;
+            }
+        } catch (IOException ee) {
+        }
+        return i;
+    }
+
+    // 跳过输入流中的n个字节
+    public long skip(long n) throws IOException {
+
+        long remaining = n;
+        int nr;
+
+        if (n <= 0) {
+            return 0;
+        }
+
+        int size = (int)Math.min(MAX_SKIP_BUFFER_SIZE, remaining);
+        byte[] skipBuffer = new byte[size];
+        while (remaining > 0) {
+            nr = read(skipBuffer, 0, (int)Math.min(size, remaining));
+            if (nr < 0) {
+                break;
+            }
+            remaining -= nr;
+        }
+
+        return n - remaining;
+    }
+
+    public int available() throws IOException {
+        return 0;
+    }
+
+    public void close() throws IOException {}
+
+    public synchronized void mark(int readlimit) {}
+
+    public synchronized void reset() throws IOException {
+        throw new IOException("mark/reset not supported");
+    }
+
+    public boolean markSupported() {
+        return false;
+    }
+
+}
+
+
+
+
