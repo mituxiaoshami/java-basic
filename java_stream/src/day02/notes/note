@@ -20,3 +20,128 @@ synchronized int         read()
 synchronized int         read(byte[] buffer, int offset, int length)
 synchronized void        reset()
 synchronized long        skip(long byteCount)
+
+
+ByteArrayInputStream源码分析:
+
+package java.io;
+
+public class ByteArrayInputStream extends InputStream {
+
+    // 保存字节输入流数据的字节数组
+    // ByteArrayInputStream的read()等方法都是通过操作这个字节数组实现的
+    protected byte buf[];
+
+    // 下一个会被读取的字节的索引
+    protected int pos;
+
+    // 标记的索引
+    protected int mark = 0;
+
+    // 字节流的长度
+    protected int count;
+
+    // 构造函数：创建一个内容为buf的字节流
+    public ByteArrayInputStream(byte buf[]) {
+        // 初始化“字节流对应的字节数组为buf”
+        this.buf = buf;
+        // 初始化“下一个要被读取的字节索引号为0”
+        this.pos = 0;
+        // 初始化“字节流的长度为buf的长度”
+        this.count = buf.length;
+    }
+
+    // 构造函数：创建一个内容为buf的字节流，并且是从offset开始读取数据，读取的长度为length
+    public ByteArrayInputStream(byte buf[], int offset, int length) {
+        // 初始化“字节流对应的字节数组为buf”
+        this.buf = buf;
+        // 初始化“下一个要被读取的字节索引号为offset”
+        this.pos = offset;
+        // 初始化“字节流的长度”
+        this.count = Math.min(offset + length, buf.length);
+        // 初始化“标记的字节流读取位置”
+        this.mark = offset;
+    }
+
+    // 读取下一个字节
+    public synchronized int read() {
+        // 返回已经存储到内部的字节数组的下一个字节
+        // pos++ 是先返回buf[pos] & 0xff的值之后 pos也就是下标位置增1
+        return (pos < count) ? (buf[pos++] & 0xff) : -1;
+    }
+
+    // 将“字节流的数据写入到字节数组b中”
+    // off是“字节数组b的偏移地址”，表示从数组b的off开始写入数据
+    // len是“写入的字节长度”
+    public synchronized int read(byte b[], int off, int len) {
+        if (b == null) {
+            throw new NullPointerException();
+        } else if (off < 0 || len < 0 || len > b.length - off) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        if (pos >= count) {
+            return -1;
+        }
+
+        int avail = count - pos;
+        if (len > avail) {
+            len = avail;
+        }
+        if (len <= 0) {
+            return 0;
+        }
+        // 将内部数组相应的偏移量 复制给需要存储的数组中
+        System.arraycopy(buf, pos, b, off, len);
+        pos += len;
+        return len;
+    }
+
+    // 跳过“字节流”中的n个字节。
+    public synchronized long skip(long n) {
+        long k = count - pos;
+        if (n < k) {
+            k = n < 0 ? 0 : n;
+        }
+
+        pos += k;
+        return k;
+    }
+
+    // “能否读取字节流的下一个字节”
+    public synchronized int available() {
+        return count - pos;
+    }
+
+    // 是否支持“标签”
+    public boolean markSupported() {
+        return true;
+    }
+
+    // 保存当前位置。readAheadLimit在此处没有任何实际意义
+    public void mark(int readAheadLimit) {
+        mark = pos;
+    }
+
+    // 重置“字节流的读取索引”为“mark所标记的位置”
+    public synchronized void reset() {
+        pos = mark;
+    }
+
+    public void close() throws IOException {
+    }
+
+}
+
+1、通过ByteArrayInputStream(byte buf[]) 或 ByteArrayInputStream(byte buf[], int offset, int length) ，我们可以根据buf数组来创建字节流对象。
+   而其实，读取流中的字节都是通过内部的一个字节数组实现的。
+   过程: 1、通过构造将传进去的字节数组赋值给内部的字节数组
+         2、然后通过操作内部的字节数组实现相应的read()和read(byte buf[])等方法
+2、read()的作用是从字节流中“读取下一个字节”。
+3、read(byte[] buffer, int offset, int length)的作用是从字节流读取字节数据，并写入到字节数组buffer中。offset是将字节写入到buffer的起始位置，length是写入的字节的长度。
+   实现原理: 通过 System.arraycopy(buf, pos, b, off, len); 方法，将内部的字节数组按照偏移量赋值给要存储的数组。
+4、markSupported()是判断字节流是否支持“标记功能”。它一直返回true。 表示ByteArrayInputStream支持mark和reset方法。
+5、mark(int readlimit)的作用是记录标记位置。记录标记位置之后，某一时刻调用reset()则将“字节流下一个被读取的位置”重置到“mark(int readlimit)所标记的位置”；也就是说，reset()之后再读取字节流时，是从mark(int readlimit)所标记的位置开始读取。
+
+
+
