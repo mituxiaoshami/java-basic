@@ -29,6 +29,7 @@ package java.io;
 public class ByteArrayInputStream extends InputStream {
 
     // 保存字节输入流数据的字节数组
+    // ByteArrayInputStream的read()等方法都是通过操作这个字节数组实现的
     protected byte buf[];
 
     // 下一个会被读取的字节的索引
@@ -64,6 +65,8 @@ public class ByteArrayInputStream extends InputStream {
 
     // 读取下一个字节
     public synchronized int read() {
+        // 返回已经存储到内部的字节数组的下一个字节
+        // pos++ 是先返回buf[pos] & 0xff的值之后 pos也就是下标位置增1
         return (pos < count) ? (buf[pos++] & 0xff) : -1;
     }
 
@@ -88,6 +91,7 @@ public class ByteArrayInputStream extends InputStream {
         if (len <= 0) {
             return 0;
         }
+        // 将内部数组相应的偏移量 复制给需要存储的数组中
         System.arraycopy(buf, pos, b, off, len);
         pos += len;
         return len;
