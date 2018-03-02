@@ -115,9 +115,12 @@ public class PipedInputStream extends InputStream {
     protected static final int PIPE_SIZE = DEFAULT_PIPE_SIZE;
 
     // 缓冲区
+    // 管道输入与输出实际上使用的是一个循环缓冲数组来实现，这个数组默认大小为1024字节。
+    // 输入流PipedInputStream从这个循环缓冲数组中读数据，输出流PipedOutputStream往这个循环缓冲数组中写入数据。
+    // 当这个缓冲数组已满的时候，输出流PipedOutputStream所在的线程将阻塞；当这个缓冲数组首次为空的时候，输入流PipedInputStream所在的线程将阻塞。
     protected byte buffer[];
 
-    //下一个写入字节的位置。in==out代表满，说明“写入的数据”全部被读取了。
+    /*代表连接该管道输入流的输出流PipedOutputStream下一个字节将存储在循环缓冲数组buffer的位置。当in<0说明缓冲数组是空的;当in==out说明缓冲数组已满。*/
     protected int in = -1;
     //下一个读取字节的位置。in==out代表满，说明“写入的数据”全部被读取了。
     protected int out = 0;
@@ -160,10 +163,12 @@ public class PipedInputStream extends InputStream {
 
     // 接收int类型的数据b。
     // 它只会在PipedOutputStream的write(int b)中会被调用
+    // 这个方法是一个同步方法，也就是说当在一个PipedInputStream对象上调用其receive方法时，该对象所在的线程必须先获得这个PipedInputStream对象的锁，才能进入该方法。
     protected synchronized void receive(int b) throws IOException {
         // 检查管道状态
         checkStateForReceive();
         // 获取“写入管道”的线程
+        // 将当前线程保存至成员变量 writeSide，即表示管道输出流所在的线程
         writeSide = Thread.currentThread();
         // 若“写入管道”的数据正好全部被读取完，则等待。
         if (in == out)
@@ -227,6 +232,7 @@ public class PipedInputStream extends InputStream {
         } else if (closedByWriter || closedByReader) {
             throw new IOException("Pipe closed");
         } else if (readSide != null && !readSide.isAlive()) {
+            // 这里的readSide != null && !readSide.isAlive() 如果管道输入流所在的线程不为空但是线程已死(之前的管道输入流所在的线程已死)，则会抛出异常。
             throw new IOException("Read end dead");
         }
     }
