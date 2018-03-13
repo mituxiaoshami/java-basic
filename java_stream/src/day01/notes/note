@@ -9,7 +9,8 @@ IO的作用:
 和来自不同途径(文件、控制台、网络连接)的IO进行通信。
 
 起初，Java IO库的设计者通过创建大量类来克服这个问题，但是，如果这么多的类都采用的话，会导致不知道从哪里入手。
-所以，Java 1.0升级到Java 1.1 后，Sun的设计人员对原来的IO库进行了扩展，添加了大量新的内容。所以导致目前，不得不混合使用新添加的内容和旧库中的内容。
+
+自从Java 1.0升级到Java 1.1 后，Sun的设计人员对原来的IO库进行了扩展，添加了大量新的内容。所以导致目前，不得不混合使用新添加的内容和旧库中的内容。
 
 区别: Java1.0: Java提供的类都是以字节(byte)为单位，例如: FileInputStream和FileOutputStream。 在java中，字节是占1个Byte，即8位，有符号类型。
       Java1.1: 为了与国际化进行接轨，在java io中添加了许多以字符(Unicode)为单位进行操作的类。 在java中，字符是占2个Byte，即16位，无符号类型。
@@ -21,8 +22,6 @@ IO的作用:
 
 
 介于目前这种情况，我们分开介绍旧库和新库中的内容，这样有利于在合适的情况下选择最合适的类。
-
-
 
 
 字节流:
@@ -40,10 +39,6 @@ InputStream的作用: 把不同的来源转化成相同的输入流的对象，�
 4、管道：与现实生活中的管道类似：将一些东西置入一段，它们在另一端出来。
 5、一系列其他流，方便统一收集到单独一个流内。
 6、Internet连接等。
-
-除此以外，FilterInputStream属于InputStream的一个子类，而在这个类中，用到了装饰器的设计模式，它的作用是用来封装其他的输入流，并为它们提供额外的功能。FilterInputStream在
-实例化的时候，要传一个InputStream类的对象进来。而且这个类中的一系列方法实际上都是调用的都是InputStream中的read()方法。而具体装饰的部分，都有FilterInputStream的子类来实现。
-将相应的InputStream类的对象装饰之后，向外提供(也就是为其他的InputStream类提供了有用的功能)。
 
 InputStream中子类的具体实现(以字节为单位的输入流的框架(一部分)):
 
@@ -71,7 +66,7 @@ InputStream-------|- FilterInputStream|
 4、SequenceInputStream: 将两个或更多的InputStream对象转换成单个InputStream使用  使用两个InputStream对象或者一个Enumeration，用于InputStream对象的一个容器，同时，把这个容器当做
    数据源使用。通过将其和FilterInputStream对象对接，向外提供。
 
-5、FilterInputStream:过滤输入流。它是DataInputStream和BufferedInputStream的父类。
+5、FilterInputStream:过滤输入流。它是DataInputStream和BufferedInputStream的父类。用到了装饰者的设计模式，而FilterInputStream就是所有装饰器的基类。
 
 6、FilterInputStream的子类(DataInputStream): 数据输入流。它是用来装饰其它输入流，它“允许应用程序以与机器无关方式从底层输入流中读取基本 Java 数据类型”,也就是从流中读取java基本类型。
 
@@ -82,12 +77,14 @@ InputStream-------|- FilterInputStream|
 从FilterInputStream输入流中总结 装饰者设计模式
 
 那么什么是装饰者设计模式: 利用层次化对象动态和透明地添加单个对象的功能的方式，就是装饰者(Decorator)设计模式(动态的给一个对象添加一些额外的职责)。
-在FilterInputStream中是怎么体现的: 在FilterInputStream中，操作的都是InpputStream对象，也就是说，FilterInputStream类其实是对InputStream类或者InputStream子类的对象的一个修饰。
+在FilterInputStream中是怎么体现的: 在FilterInputStream中，操作的都是InputStream对象，也就是说，FilterInputStream类其实是对InputStream类或者InputStream子类的对象的一个修饰。
 添加不同类型的功能也是由FilterInputStream的子类去具体实现的，FilterInputStream只是简单的模仿了自己的基础类(InputStream)，这是一个装饰器的基本要求。
 
 要求: 装饰者设计模式规定: 装饰器方案规定封装于初始化对象中的所有对象都拥有相同的接口。以便利用装饰类的"透明"性质--我们将相同的消息发给一个对象，无论它是否已被"修饰"。
 在FilterInputStream中是怎么体现的: 对FilterInputStream类和它的子类或者说是各种装饰器类来说，无论传进去的流是上面几种的任何一种，它都是InputStream的子类，或者它都是同一个接口
                                    的实现。(因为对装饰器来说，它操作的永远的InputStream)。无论传进去的流是不是被修饰过，它说到底还是一个InputStream，所以它还可以继续被修饰。
+
+
 
 
 
@@ -118,79 +115,110 @@ public abstract class InputStream implements Closeable {
     // 能skip的大小
     private static final int MAX_SKIP_BUFFER_SIZE = 2048;
 
-    // 从输入流中读取数据的下一个字节。
+    // 从输入流中读取数据的下一个字节。返回值的int其实是byte转化的int
+    // 如果返回值为-1，说明没有可读的字节了
     public abstract int read() throws IOException;
 
-    // 将数据从输入流读入 byte 数组。
+    // 从输入流中读取一定数量的字节，并将其存储在数组b中
     public int read(byte b[]) throws IOException {
         return read(b, 0, b.length);
     }
 
-    // 将最多 len 个数据字节从此输入流读入 byte 数组。
+    // 将最多 len 个数据字节从此输入流读入 b 数组。
+    // 偏移量代表读取的字节从b数组哪个下标开始存入
     public int read(byte b[], int off, int len) throws IOException {
         if (b == null) {
+            // 如果字节数组b为空，抛出空指针异常
             throw new NullPointerException();
         } else if (off < 0 || len < 0 || len > b.length - off) {
+            // 如果偏移量或者长度不合适，报出越界异常
             throw new IndexOutOfBoundsException();
         } else if (len == 0) {
+            // 如果读取长度为0，直接返回0
             return 0;
         }
-
+        // 调用read()方法读取一个字节，读取的字节为c
         int c = read();
+        // 如果读取字节为-1，说明没有读取到字节，返回-1即可
         if (c == -1) {
             return -1;
         }
+        // 将读取到的字节，存入的数组b中偏移量off的下标位置中
         b[off] = (byte)c;
-
+        // 上边已经读取了一个字节，i从1开始，下边要开始循环读取共（len-1）个字节
         int i = 1;
         try {
             for (; i < len ; i++) {
+                // 读取下一个字节
                 c = read();
                 if (c == -1) {
+                    // 读取到-1说明读不到字节了，返回-1跳出循环即可
                     break;
                 }
+                // 下一个字节存入数组b的(off+i)下标处
                 b[off + i] = (byte)c;
             }
         } catch (IOException ee) {
         }
+        // 返回读取到的字节个数
         return i;
     }
 
     // 跳过输入流中的n个字节
     public long skip(long n) throws IOException {
-
+        // 定义剩余要跳过的字节数量为remaining等于n
         long remaining = n;
+        // 定义下边每次循环读取的字节数量为nr
         int nr;
-
+        // 要跳过的字节数n小于等于0，说明不需要跳过字节则直接返回0
         if (n <= 0) {
             return 0;
         }
-
+        // 跳过的字节数size
+        // 情况1，要跳过的字节数量大于2048，那么size就取2048
+        // 情况2，要跳过的字节数量小于2048，那么size就取要跳过的字节数量
         int size = (int)Math.min(MAX_SKIP_BUFFER_SIZE, remaining);
+        // 根据上一步确定的跳过的字节数size来定义字节数组
         byte[] skipBuffer = new byte[size];
+        // 如果剩余要跳过的字节数量大于0就继续循环
         while (remaining > 0) {
+            // 从0开始，读取size和remaining间较小数的字节存入skipBuffer中，返回读取字节数量为nr
+            // 这个循环中remaining即剩余跳过字节数量是不断减小的，所以有两种情况：
+            // 情况1，对应上边的情况1，要跳过的字节数太大，大于2048
+            // 要跳过的字节数和剩余的字节数相比，如果剩余的还是太大，那么就读取size个数的字节
+            // 情况2，对应上边的情况2
+            // 要跳过的字节数大于等于剩余要跳过的字节数，那么就直接读取剩余跳过的字节即可
             nr = read(skipBuffer, 0, (int)Math.min(size, remaining));
+            // 如果返回的字节数nr小于0，说明没有读取到字节，跳出循环
             if (nr < 0) {
                 break;
             }
+            // 剩余的字节数量，等于要减去已经读取了的字节
+            // 如果是情况1，多次循环，每次都减去2048，直到剩余的小于2048了，剩下的一次读取即可
+            // 如果是情况2，一次循环的读取就OK了，remaining为0
             remaining -= nr;
         }
 
         return n - remaining;
     }
 
+    // 返回可读的字节数
     public int available() throws IOException {
         return 0;
     }
 
+    // 返回可读的字节数
     public void close() throws IOException {}
 
+    // 标记该位置，以便使用reset()方法回滚回该位置
     public synchronized void mark(int readlimit) {}
 
+    // 回滚回mark()标记的位置
     public synchronized void reset() throws IOException {
         throw new IOException("mark/reset not supported");
     }
 
+    // 判断是否支持mark()、reset()方法
     public boolean markSupported() {
         return false;
     }
