@@ -32,6 +32,12 @@ Java IO类可分为输入与输出两个部分:
 
 从InputStream开始入手:
 
+InputStream是一个抽象类，它实现了Closeable接口，Closeable接口是jdk1.5新增的，实现了Closeable接口的类的对象可以被关闭。
+而Closeable接口继承了AutoCloseable接口，而AutoCloseable接口是jdk1.7添加的新接口，被打包到java.lang包中。
+
+AutoCloseable接口对JDK7新添加的带资源的try语句提供了支持，这种try语句可以自动执行资源关闭过程。
+只有实现了AutoCloseable接口的类的对象才可以由带资源的try语句进行管理。
+
 InputStream的作用: 把不同的来源转化成相同的输入流的对象，而这些来源包括
 1、字节数组
 2、String对象
@@ -81,12 +87,9 @@ InputStream-------|- FilterInputStream|
 添加不同类型的功能也是由FilterInputStream的子类去具体实现的，FilterInputStream只是简单的模仿了自己的基础类(InputStream)，这是一个装饰器的基本要求。
 
 要求: 装饰者设计模式规定: 装饰器方案规定封装于初始化对象中的所有对象都拥有相同的接口。以便利用装饰类的"透明"性质--我们将相同的消息发给一个对象，无论它是否已被"修饰"。
+
 在FilterInputStream中是怎么体现的: 对FilterInputStream类和它的子类或者说是各种装饰器类来说，无论传进去的流是上面几种的任何一种，它都是InputStream的子类，或者它都是同一个接口
                                    的实现。(因为对装饰器来说，它操作的永远的InputStream)。无论传进去的流是不是被修饰过，它说到底还是一个InputStream，所以它还可以继续被修饰。
-
-
-
-
 
 
 InputStream方法列表:
