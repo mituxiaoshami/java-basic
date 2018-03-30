@@ -14,6 +14,7 @@ import java.io.IOException;
  * Demo控制器
  */
 @Controller
+@RequestMapping("demo")
 public class DemoController {
 
     @Autowrited
