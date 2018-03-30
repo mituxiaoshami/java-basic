@@ -18,7 +18,7 @@
   <servlet-mapping>
     <servlet-name>DispatcherServlet</servlet-name>
     <!-- 表示任何url都要经过配置的这个servlet的拦截-->
-    <url-pattern>/*</url-pattern>
+    <url-pattern>/demo/*</url-pattern>
   </servlet-mapping>
 
 </web-app>

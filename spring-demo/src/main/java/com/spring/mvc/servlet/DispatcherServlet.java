@@ -33,8 +33,6 @@ public class DispatcherServlet extends HttpServlet{
     private Map<String, Object> ioc = new HashMap<String, Object>();
 
     // 存放handlerMapping
-    // private Map<String, Method> handlerMapping = new HashMap<String, Method>();
-    // 改造
     private List<Handler> handlerMapping = new ArrayList<Handler>();
 
     // 初始化阶段调用的方法
@@ -265,7 +263,8 @@ public class DispatcherServlet extends HttpServlet{
         try {
             Handler hander = getHandler(req);
 
-            if (hander == null) {
+            // 如果没有匹配到 并且不是根路径
+            if (hander == null ) {
                 // 如果没有匹配上，返回404错误
                 resp.getWriter().write("404 NOT FOUND");
                 return;
@@ -353,9 +352,9 @@ public class DispatcherServlet extends HttpServlet{
     // 内部类 记录Controller中的RequestMapping和Method的对应关系
     private class Handler {
 
-        protected Object controller; // 保存方法对应的实例
+        protected Object controller; // 保存方法对应的实例 也就是xxController实例
         protected Method method; // 保存映射方法
-        protected Pattern pattern; // 正则表达式
+        protected Pattern pattern; // url(包括正则表达式)
         protected Map<String, Integer> paramIndexMapping; // 参数顺序
 
         /**
