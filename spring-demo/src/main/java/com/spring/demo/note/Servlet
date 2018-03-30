@@ -1,0 +1,42 @@
+Spring的web框架是一个请求驱动的web框架(通过请求来驱动相应的业务)
+
+这个框架的设计是围绕一个中心的Servlet进行，它能将请求分发给控制器，并提供其他功能帮助web应用开发，而这个Servlet就是DispatcherServlet
+
+DispatcherServlet与Spring IoC容器无缝集成，从而可以获得Spring的所有好处。
+
+DispatcherServlet对请求的处理流程:
+
+Incoming request -------->                  Delegate request           Handle request
+                           Front Controller ----------------->
+                                  ↑   ↓                          Controller
+Return response <--------         ↑   ↓   <----------------
+                                  ↑   ↓       model                  Create model
+                                  ↑   ↓       Delegate rendering
+                                  ↑  model     of response
+                                  ↑   ↓
+              Return Controller   ↑   ↓ Render response
+                                  ↑   ↓
+                                  ↑   ↓
+                               View template
+
+通过流程图，我们会发现这里其实用到了"Front Controller",也就是前端控制器设计模式(DispatcherServlet是前端控制器设计模式的实现)。
+
+前端控制器模式将所有请求集中到一个类处理，由该类依据不同的请求来执行相应的动作。
+要求在WEB应用系统的前端（Front）设置一个入口控制器（Controller），所有的request请求都被发往该控制器统一处理。
+Front Controller一般可以用来做一个共通处理比如认证，页面导航，Session管理，国际化或本地化处理等。
+
+虽然前端控制器模式推荐对于全部的请求使用统一处理，但是它也没有限制在一个系统中只能具有一个控制器，在系统中的每个层次都可以具有多个控制器，并且映射至不同的系统服务。
+
+Tomcat是一个Servlet容器，它与Servlet对象进行交互的流程:
+
+1、Web客户向Servlet容器（Tomcat）发出Http请求
+2、Servlet容器分析客户的请求信息
+3、Servlet容器创建一个HttpRequest对象，将客户请求的信息封装到这个对象中
+4、Servlet容器创建一个HttpResponse对象
+5、Servlet容器调用HttpServlet对象的service方法，把HttpRequest对象与HttpResponse对象作为参数传给 HttpServlet对象
+6、HttpServlet调用HttpRequest对象的有关方法，获取Http请求信息
+7、HttpServlet调用HttpResponse对象的有关方法，生成响应数据
+8、Servlet容器把HttpServlet的响应结果传给Web客户
+
+
+
