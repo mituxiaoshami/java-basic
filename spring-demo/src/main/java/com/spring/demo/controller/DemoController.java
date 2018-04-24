@@ -30,8 +30,8 @@ public class DemoController {
         }
     }
 
-    @RequestMapping("/edit")
-    public void edit(HttpServletRequest request, HttpServletResponse response, @RequestParam("id") Integer id) {
+    @RequestMapping("/get-url")
+    public void getUrl(HttpServletRequest request, HttpServletResponse response, @RequestParam("id") Integer id) {
 
 
     }

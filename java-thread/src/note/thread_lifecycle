@@ -1,0 +1,60 @@
+线程的生命周期:
+
+
+                        新建
+                         ↓
+                         ↓(t.start())
+(锁池就是同步队列)       ↓
+   锁池   →→→→   可运行状态   ←←←← (Thread.sleep()方法结束，t线程执行结束)
+    ↑  ↑(synchronized)↑ ↓
+    ↑      ↑          ↑ ↓(os选中)             阻塞状态
+    ↑(notify) ↑ (cpu时间片用完，thread.yield 运行状态到可运行状态, 都是被动执行的)
+    ↑(notifyAll) ↑    ↑ ↓
+  等待队列  ←←←←  运行状态    →→→→ (Thread.sleep()，t.join() 运行状态到阻塞状态)
+              (wait())   ↓
+                         ↓(run执行结束、异常退出)
+                         ↓
+                      死亡状态
+
+
+
+
+synchronized实现原理:
+
+通过字节码文件可以发现:
+
+重点是这两条指令:
+
+1、monitorenter 获取监视器Monitor
+2、monitorexit
+
+synchronized同步块的实现机制(粗略的说说)：
+                                                                           lock.notify/notifyall();
+                                                                                                ↓
+       Monitor.Enter                    Monitor.Enter成功(获取监视器成功)                        Monitor.Exit (让同步队列再去竞争这个监视器)
+------------------------>监视器Monitor-------------------------------------->对象(监视对象)------------------------------------------------->
+                          ↑  ↓                                                  ↓
+    Monitor.Exit出队列后  ↑  ↓                                                  ↓
+同步队列又去同时获取监视器↑  ↓                                                  ↓lock.wait();
+                          ↑  ↓                                                  ↓当前线程还会进入等待队列
+                          ↑  ↓
+                          ↑  ↓                           调用lock.notify之后(会把等待队列迁移到同步队列中)
+   同步队列(当同时有多个线程获取监视器，只有一个线程成功， ←←←←←←←←←←←←←←←←←  等待队列
+   那么会把其他线程放入同步队列中，状态变成阻塞状态)
+
+
+
+wait/notify:
+
+wait: 让一个线程进入等待 并且释放锁
+wait/notify的API注释: The current thread must own this object's monitor. (当前线程必须拥有对象的监视器)
+(所以wait/notify必须放在synchronized代码块里面)
+
+sleep: 不会释放锁
+
+yield: 当前线程的CPU资源让出来, 当前线程变成可运行状态
+
+
+
+
+

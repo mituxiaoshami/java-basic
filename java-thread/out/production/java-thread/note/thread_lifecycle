@@ -1,0 +1,25 @@
+线程的生命周期:
+
+
+                        新建
+                         ↓
+                         ↓(t.start())
+                         ↓
+   锁池   →→→→   可运行状态   ←←←← (Thread.sleep()方法结束，t线程执行结束)
+    ↑  ↑(synchronized)↑ ↓
+    ↑      ↑          ↑ ↓(os选中)             阻塞状态
+    ↑(notify) ↑ (cpu时间片用完，thread.yield 运行状态到可运行状态, 都是被动执行的)
+    ↑(notifyAll) ↑    ↑ ↓
+  等待队列  ←←←←  运行状态    →→→→ (Thread.sleep()，t.join() 运行状态到阻塞状态)
+              (wait())   ↓
+                         ↓(run执行结束、异常退出)
+                         ↓
+                      死亡状态
+
+
+
+1、新建线程(Thread、Runnable、Callable/future、ThreadPool/FutureTask)
+
+2、新建线程---------> 可运行状态  (t.start())
+
+3、OS调用策略选取可运行状态的线程
