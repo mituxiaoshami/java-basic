@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class Collection {
 
-    public static void main(String[] args) {
+    public static void main(StringTest[] args) {
 
         Map<String, String> map = new HashMap<>();
         map.put("key","1");
